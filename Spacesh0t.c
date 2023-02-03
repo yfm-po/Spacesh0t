@@ -1,102 +1,24 @@
-#define _DEFAULT_SOURCE
-#include <ncurses.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <math.h>
-#include <time.h>
-#include <stdbool.h>
-#include <unistd.h>
-
-
-#define count(x)	sizeof(x)/sizeof(x[0])
-#define diff(x,y)	abs(x-y)
-
-
+#include "Spacesh0t.h"
 
 int main(int argc, char *argv[])
 {
-    if (argc != 2)
-    {
-        printf("Give difficulty (1/2/3) !!\n");
-        return 1;
-    }
-    
-    
-    
+    throwException(argc, "Give difficulty level as argument: 1, 2 or 3\n");
     srand(time(NULL));
-    
-    char name[20];
-    
-    printf("Enter your name: ");
-    printf("\n");
-    
-    scanf("%s", name);
-    
-    
-    
-    
-    printf("Welcome to spacesh0t, %s.\n",name);
-    int u; 
-    printf("Press 0 if you want to see the scoreboard, press 1 if you want to play: \n");
-    scanf("%d", &u);
-    
-    if (u == 0)
-    {
-        FILE *f;
-        char c;
-        
-        f = fopen("./highscores.txt","r");
-        c = fgetc(f);
-        while (c != EOF)
-        {
-            printf("%c",c);
-            c = fgetc(f);
-        }
-        printf("\n");
-        fclose(f);
-        sleep(3);
-    }
-    else if (u == 1)
-    {
-        
-    }
+    askForNameAndScoreBoard();
 
-
-    
-    
     printf("In this game you will have to fight kill as many enemy spaceships you can.\n");
     printf("Every level-up will spawn more and more enemies.\n");
     printf("You can respawn 5 times, so you have only 5 lives.\n");
     sleep(3);
     
-    
-    
-    
-    
-   
-    
-    
-    
-    
-    //initializing screen
     initscr();
-    
-    //initializing colors
     start_color();
-    
-    //used as always...
     noecho();
     raw();
     cbreak();
     timeout(0);
-    
-    //allowing keyboard
     keypad(stdscr, TRUE);
-    
-    //cursor
     curs_set(FALSE);
-    
     nodelay(stdscr, TRUE);
     
     init_pair(1,COLOR_BLACK, COLOR_BLACK);
@@ -110,23 +32,24 @@ int main(int argc, char *argv[])
     init_pair(9,COLOR_GREEN,COLOR_GREEN);    
     
     int level = 1;
-    
     int argument = 0;
     char *a = argv[1];
     argument = atoi(a);
     int splitter;
-    
-    if (argument == 1)
-    {    
-        splitter = 100;
-    }
-    else if (argument == 2)
+
+    switch (argument)
     {
-        splitter = 75;
-    }
-    else if (argument == 3)
-    {
-        splitter = 10;
+        case 1:
+            splitter = 100;
+            break;
+        case 2:
+            splitter = 75;
+            break;
+        case 3:
+            splitter = 10;
+            break;
+        default:
+            break;
     }
     
     int p;
@@ -139,27 +62,13 @@ int main(int argc, char *argv[])
     int bullets[50][2];
     int enemies[50][3];
     FILE *highscore;
-   
-  
-    
-    
-    p=0;//counter, it will help us in generating the map
-    
-    //starting height of our spaceship
-    h=10;
-    //starting width of our spaceship
+    p = 0;
+    h = 10;
     w = 6;
-    
-    //die bool value, at the start it's false for sure.
     die = false;
     
     memset(bullets, 0, sizeof(bullets));
     memset(enemies, 0, sizeof(enemies));
-    
-    
-    
-    
-    
     
     while (true)
     {
@@ -172,17 +81,12 @@ int main(int argc, char *argv[])
             break;
               
         }
-        
-        
+
         usleep(10000);
+        p++;
         
-        p++;//increasing p 
+        key = getch(); 
         
-        
-        key = getch(); //waiting for user input
-        
-        
-        //switch function for some keys
         switch(key)
         {
             case 'w': case KEY_UP:
@@ -242,12 +146,9 @@ int main(int argc, char *argv[])
                         endwin();
                     }
                 }
-                
                 break;
-                
-                
             }
-            
+    
             case 'p' : case 'P' :
             {
                 mvprintw(LINES/2,COLS/2-5,"[ PAUSED ]");
@@ -265,17 +166,15 @@ int main(int argc, char *argv[])
             }
          }
         
-        //generating enemy position
-        if((rand() % splitter) == 0)//the splitter is always being decreased in our loop(when we get a kill, so there will spawn always more enemies if we kill one)
+        if((rand() % splitter) == 0)
         {
             for(int x = 0;x != count(enemies);x++)
             {
                 if(enemies[x][0] == 0)
                 {
-                    enemies[x][0] = 180;  //the enemies will be spawning from x=180
-                    enemies[x][1] = 7;                                        //y=7
+                    enemies[x][0] = 180;
+                    enemies[x][1] = 7;
                   
-                    //spawning the enemies randomly vertically
                     if (rand() % 2 == 0)
                     {
                         enemies[x][1] -= (rand() % 7);
@@ -290,23 +189,20 @@ int main(int argc, char *argv[])
         }
         
         int n;
-        //generating the map, i have chosen 600x300pixels
-        for(int x = 0;x != 600; x++)
+        for (int x = 0;x != 600; x++)
         {
-            for(int y = 0;y != 300; y++)
+            for (int y = 0;y != 300; y++)
             {
                 y-=20;
-                //'generating' black space with cos
                 
-                if(cos((float)(x+p)/30) > ((float)y / 5))
+                if (cos((float)(x+p)/30) > ((float)y / 5))
                 {
                     n = 1; 
                 }
                 else
                 {
                     n = 2;
-                    //in the case of collision, we die.
-                    if(x == 16 && (h-18 > y))
+                    if (x == 16 && (h-18 > y))
                     {
                         
                         die = true;
@@ -331,10 +227,8 @@ int main(int argc, char *argv[])
         
         
         
-        //Shooting out the bullets
         for(int x = 0;x != count(bullets); x++)
         {
-            //if bullets's x'th array's zero'th array isn't zero, we are shooting out the bullet
             if (bullets[x][0] != 0)
             {
                 bullets[x][0] += 1;
@@ -342,7 +236,6 @@ int main(int argc, char *argv[])
                 mvprintw(bullets[x][1],bullets[x][0],">");
             }
             
-            //the bullet is being deleted if it reaches 200 pixels
             if(bullets[x][0] > 200)
             {
                 bullets[x][0] = 0;
@@ -351,7 +244,6 @@ int main(int argc, char *argv[])
         }
         
         
-        //Drawing the enemies
         for(int x = 0;x != count(enemies); x++)
         {
             if (enemies[x][0] && enemies[x][2] == 0)
@@ -379,7 +271,6 @@ int main(int argc, char *argv[])
                 
                 attron(COLOR_PAIR(4));
                 
-                //in case of collision we die
                 if(enemies[x][0] != 0 && enemies[x][0] < w && diff(h, enemies[x][1]) < 3)
                 {
                     if (deaths == 5)
@@ -413,11 +304,9 @@ int main(int argc, char *argv[])
                 
                 for (int y = 0;y != count(bullets);y++)
                 {
-                    //if the bullets hit the enemies, they die and we get a kill
-                    if(bullets[y][0] != 0 && diff(enemies[x][0],bullets[y][0]) < 2 && diff(enemies[x][1],bullets[y][1]) < 2)
+                    if (bullets[y][0] != 0 && diff(enemies[x][0],bullets[y][0]) < 2 && diff(enemies[x][1],bullets[y][1]) < 2)
                     {
                         kills++;
-                        //here we are increasing the amount of kills and increasing the amount of the enemies
                         if (splitter != 5)
                         {
                             splitter--;
@@ -435,7 +324,7 @@ int main(int argc, char *argv[])
                 }
             }
             
-            if(enemies[x][0])
+            if (enemies[x][0])
             {
                 mvprintw(enemies[x][1]-1,enemies[x][0]+2,"/|\\");
 	            mvprintw(enemies[x][1],enemies[x][0],"<O-==={");
@@ -483,13 +372,47 @@ int main(int argc, char *argv[])
         }
     }
     
-    
-    
-    
-    
     refresh();
     endwin();
     highscore = fopen("./highscores.txt","a");
     fprintf(highscore, "Name: %s | Level: %d | Kills: %d\n", name, level, kills);
     fclose(highscore);
+}
+
+void throwException(int argc, char *msg)
+{
+    if (argc != 2)
+    {
+        printf((char*)msg);
+        exit(EXIT_FAILURE);
+    }
+}
+
+void askForNameAndScoreBoard()
+{
+    char name[20];
+    printf("Enter your name: ");
+    printf("\n");
+    scanf("%s", name);
+    printf("Welcome to spacesh0t, %s.\n",name);
+    int u; 
+    printf("Press 0 if you want to see the scoreboard, press 1 if you want to play: \n");
+    scanf("%d", &u);
+    
+    if (u == 0)
+    {
+        FILE *f;
+        char c;
+        
+        f = fopen("./highscores.txt","r");
+        c = fgetc(f);
+        while (c != EOF)
+        {
+            printf("%c",c);
+            c = fgetc(f);
+        }
+        printf("\n");
+        fclose(f);
+        sleep(3);
+    }
 }
